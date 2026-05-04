@@ -82,13 +82,10 @@ jobs:
           grep -v '^\*\.' | \
           grep -vE '^[0-9]{1,3}\.[0-9]' | \
           grep -vE '^[a-f0-9]{32}\.' > all_subdomains_clean.txt || true
-
           total=$(wc -l < all_subdomains_clean.txt)
           half=$(( total / 2 ))
-
           head -n $half all_subdomains_clean.txt > subdomains1.txt
           tail -n +$((half + 1)) all_subdomains_clean.txt > subdomains2.txt
-
           echo "Total: $total"
           echo "File 1: $(wc -l < subdomains1.txt)"
           echo "File 2: $(wc -l < subdomains2.txt)"
@@ -99,4 +96,49 @@ jobs:
           git config --global user.name "BugBountyBot"
           git add subdomains1.txt subdomains2.txt
           git diff --staged --quiet || git commit -m "Weekly subdomain update $(date +'%Y-%m-%d')"
+          git push
+
+  httpx:
+    needs: combine
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    if: ${{ always() && needs.combine.result == 'success' }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Cache Go tools
+        uses: actions/cache@v4
+        id: cache-tools
+        with:
+          path: ~/go/bin
+          key: go-tools-${{ runner.os }}-v1
+
+      - name: Install httpx
+        if: steps.cache-tools.outputs.cache-hit != 'true'
+        run: go install github.com/projectdiscovery/httpx/cmd/httpx@latest
+
+      - name: Run httpx on all subdomains
+        run: |
+          export PATH=$PATH:$(go env GOPATH)/bin
+          cat subdomains1.txt subdomains2.txt > all_subdomains.txt
+          echo "Total subdomains to probe: $(wc -l < all_subdomains.txt)"
+          httpx -l all_subdomains.txt \
+            -silent \
+            -timeout 5 \
+            -retries 0 \
+            -rl 300 \
+            -threads 100 \
+            -o live_hosts.txt || true
+          echo "Live hosts found: $(wc -l < live_hosts.txt)"
+
+      - name: Commit live hosts
+        run: |
+          git config --global user.email "bugbountybot@github.com"
+          git config --global user.name "BugBountyBot"
+          git add live_hosts.txt
+          git diff --staged --quiet || git commit -m "Weekly live hosts update $(date +'%Y-%m-%d')"
           git push
