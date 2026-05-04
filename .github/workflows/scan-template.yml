@@ -39,36 +39,9 @@ on:
         required: true
 
 jobs:
-  prepare:
-    runs-on: ubuntu-latest
-    outputs:
-      batches: ${{ steps.split.outputs.batches }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Split subdomains into batches
-        id: split
-        run: |
-          if [ -f subdomains1.txt ] && [ -s subdomains1.txt ]; then
-            cat subdomains1.txt subdomains2.txt > input.txt
-          else
-            cp domains.txt input.txt
-          fi
-          total=$(wc -l < input.txt)
-          num_batches=$(( (total + 199) / 200 ))
-          batches=$(seq 1 $num_batches | jq -R . | jq -sc .)
-          echo "batches=$batches" >> $GITHUB_OUTPUT
-
   scan:
-    needs: prepare
     runs-on: ubuntu-latest
-    timeout-minutes: 85
-    strategy:
-      fail-fast: false
-      max-parallel: 10
-      matrix:
-        batch: ${{ fromJson(needs.prepare.outputs.batches) }}
+    timeout-minutes: 360
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -95,26 +68,43 @@ jobs:
           restore-keys: |
             nuclei-templates-${{ runner.os }}-
 
-      - name: Split batch
+      - name: Prepare input
         run: |
-          start=$(( (${{ matrix.batch }} - 1) * 200 + 1 ))
-          sed -n "${start},$((start + 199))p" input.txt > batch_hosts.txt
+          if [ -f live_hosts.txt ] && [ -s live_hosts.txt ]; then
+            cp live_hosts.txt input.txt
+            echo "Using weekly live_hosts.txt"
+          else
+            cp domains.txt input.txt
+            echo "Falling back to domains.txt"
+          fi
+          echo "Total targets: $(wc -l < input.txt)"
 
-      - name: Run httpx
+      - name: Run httpx (only if no live_hosts.txt)
+        if: ${{ !hashFiles('live_hosts.txt') }}
         run: |
           export PATH=$PATH:$(go env GOPATH)/bin
-          httpx -l batch_hosts.txt ${{ inputs.httpx_flags }} -timeout 5 -retries 0 -rl 150 -o live_hosts.txt || true
+          httpx -l input.txt ${{ inputs.httpx_flags }} \
+            -timeout 5 -retries 0 -rl 150 -threads 50 \
+            -o live_hosts.txt || true
+          cp live_hosts.txt input.txt
+          echo "Live hosts: $(wc -l < input.txt)"
 
       - name: Run katana (if enabled)
         if: inputs.use_katana == true
         run: |
           export PATH=$PATH:$(go env GOPATH)/bin
-          katana -list live_hosts.txt -silent -js-crawl -depth 2 -timeout 10 -o urls.txt || true
+          katana -list input.txt -silent -js-crawl -depth 2 \
+            -timeout 10 -o urls.txt || true
 
       - name: Run nuclei
         run: |
           export PATH=$PATH:$(go env GOPATH)/bin
-          INPUT_FILE="${{ inputs.nuclei_input }}.txt"
+
+          if [ "${{ inputs.nuclei_input }}" = "urls" ] && [ -f urls.txt ]; then
+            INPUT_FILE="urls.txt"
+          else
+            INPUT_FILE="input.txt"
+          fi
 
           TAGS_FLAG=""
           if [ -n "${{ inputs.tags }}" ]; then
@@ -126,12 +116,12 @@ jobs:
             CUSTOM_FLAG="-t custom-templates"
           fi
 
-          timeout 4500 nuclei -l "$INPUT_FILE" \
+          timeout 21000 nuclei -l "$INPUT_FILE" \
             $TAGS_FLAG \
             $CUSTOM_FLAG \
             -severity ${{ inputs.severity }} \
             -silent -retries 1 -timeout 8 \
-            -bulk-size 50 -concurrency 50 \
+            -bulk-size 100 -concurrency 100 \
             -o results.txt || true
 
       - name: Check for results
@@ -151,7 +141,7 @@ jobs:
           server_port: 465
           username: ${{ secrets.EMAIL_USER }}
           password: ${{ secrets.EMAIL_PASS }}
-          subject: "[${{ inputs.scan_name }}] Finding - Batch ${{ matrix.batch }}"
+          subject: "[${{ inputs.scan_name }}] Finding"
           body: file://results.txt
           to: ${{ secrets.EMAIL_TO }}
           from: BugBountyBot
