@@ -60,25 +60,11 @@ jobs:
           go install github.com/projectdiscovery/nuclei/v3/cmd/nuclei@latest
           go install github.com/projectdiscovery/katana/cmd/katana@latest
 
-      - name: Restore nuclei templates
-        uses: actions/cache@v4
-        with:
-          path: ~/.local/share/nuclei-templates
-          key: nuclei-templates-${{ runner.os }}-weekly
-          restore-keys: |
-            nuclei-templates-${{ runner.os }}-
-
-      - name: Ensure nuclei templates exist
+      - name: Download nuclei templates
         run: |
           export PATH=$PATH:$(go env GOPATH)/bin
-          TEMPLATES_DIR="$HOME/.local/share/nuclei-templates"
-          if [ ! -d "$TEMPLATES_DIR/http" ]; then
-            echo "Templates missing or incomplete, downloading..."
-            nuclei -update-templates -silent || true
-            echo "Done: $(ls $TEMPLATES_DIR | wc -l) folders"
-          else
-            echo "Templates ready: $(ls $TEMPLATES_DIR | wc -l) folders"
-          fi
+          nuclei -update-templates -silent || true
+          echo "Templates ready: $(ls $HOME/.local/share/nuclei-templates | wc -l) folders"
 
       - name: Prepare input
         run: |
