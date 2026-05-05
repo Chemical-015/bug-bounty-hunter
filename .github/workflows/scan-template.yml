@@ -45,7 +45,7 @@ jobs:
         id: cache-go
         with:
           path: ~/go/bin
-          key: go-tools-${{ runner.os }}-v2
+          key: go-tools-${{ runner.os }}-v3
 
       - name: Install Go tools
         if: steps.cache-go.outputs.cache-hit != 'true'
