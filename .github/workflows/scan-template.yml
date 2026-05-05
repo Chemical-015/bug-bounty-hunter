@@ -132,6 +132,13 @@ jobs:
             CUSTOM_FLAG="-t custom-templates"
           fi
 
+          echo "Input file: $INPUT_FILE"
+          echo "Lines in input: $(wc -l < $INPUT_FILE)"
+          echo "Tags flag: $TAGS_FLAG"
+          echo "Custom flag: $CUSTOM_FLAG"
+          echo "Templates dir contents:"
+          ls $HOME/.local/share/nuclei-templates/
+          
           timeout 21000 nuclei -l "$INPUT_FILE" \
             $TAGS_FLAG \
             $CUSTOM_FLAG \
