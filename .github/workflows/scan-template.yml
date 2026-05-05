@@ -82,28 +82,19 @@ jobs:
           if [ "$INPUT" = "live_hosts_403" ]; then
             if [ -f live_hosts_403.txt ] && [ -s live_hosts_403.txt ]; then
               cp live_hosts_403.txt input.txt
-              echo "Using live_hosts_403.txt ($(wc -l < input.txt) hosts)"
             else
-              echo "No 403 hosts found, skipping"
               touch input.txt
             fi
-
           elif [ "$INPUT" = "live_hosts_404" ]; then
             if [ -f live_hosts_404.txt ] && [ -s live_hosts_404.txt ]; then
               cp live_hosts_404.txt input.txt
-              echo "Using live_hosts_404.txt ($(wc -l < input.txt) hosts)"
             else
-              echo "No 404 hosts found, skipping"
               touch input.txt
             fi
-
           elif [ -f live_hosts.txt ] && [ -s live_hosts.txt ]; then
             cp live_hosts.txt input.txt
-            echo "Using live_hosts.txt ($(wc -l < input.txt) hosts)"
-
           else
             cp domains.txt input.txt
-            echo "Fallback to domains.txt ($(wc -l < input.txt) hosts)"
           fi
 
           echo "Total targets: $(wc -l < input.txt)"
@@ -126,6 +117,8 @@ jobs:
         run: |
           export PATH=$PATH:$(go env GOPATH)/bin
           TEMPLATES_DIR="$HOME/.local/share/nuclei-templates"
+          SEVERITY="${{ inputs.severity }}"
+          TAGS="${{ inputs.tags }}"
 
           if [ "${{ inputs.use_katana }}" = "true" ] && [ -f urls.txt ] && [ -s urls.txt ]; then
             INPUT_FILE="urls.txt"
@@ -140,8 +133,8 @@ jobs:
           fi
 
           TAGS_FLAG=""
-          if [ -n "${{ inputs.tags }}" ]; then
-            TAGS_FLAG="-itags ${{ inputs.tags }}"
+          if [ -n "$TAGS" ]; then
+            TAGS_FLAG="-itags $TAGS"
           fi
 
           if [ -d "custom-templates" ]; then
@@ -153,7 +146,7 @@ jobs:
           timeout 21000 nuclei -l "$INPUT_FILE" \
             $T_FLAG \
             $TAGS_FLAG \
-            -severity ${{ inputs.severity }} \
+            -severity "$SEVERITY" \
             -silent \
             -retries 1 \
             -timeout 10 \
