@@ -72,13 +72,12 @@ jobs:
         run: |
           export PATH=$PATH:$(go env GOPATH)/bin
           TEMPLATES_DIR="$HOME/.local/share/nuclei-templates"
-          if [ ! -d "$TEMPLATES_DIR" ] || [ -z "$(ls -A $TEMPLATES_DIR 2>/dev/null)" ]; then
-            echo "No templates found, downloading now..."
-            mkdir -p "$TEMPLATES_DIR"
+          if [ ! -d "$TEMPLATES_DIR/http" ]; then
+            echo "Templates missing or incomplete, downloading..."
             nuclei -update-templates -silent || true
-            echo "Templates after download: $(ls $TEMPLATES_DIR 2>/dev/null | wc -l) folders"
+            echo "Done: $(ls $TEMPLATES_DIR | wc -l) folders"
           else
-            echo "Templates found: $(ls $TEMPLATES_DIR | wc -l) folders"
+            echo "Templates ready: $(ls $TEMPLATES_DIR | wc -l) folders"
           fi
 
       - name: Prepare input
@@ -112,16 +111,7 @@ jobs:
       - name: Run nuclei
         run: |
           export PATH=$PATH:$(go env GOPATH)/bin
-          
-          # Find where templates actually are
-          if [ -d "$HOME/.local/share/nuclei-templates/http" ]; then
-            TEMPLATE_DIR="$HOME/.local/share/nuclei-templates"
-          elif [ -d "nuclei-templates/http" ]; then
-            TEMPLATE_DIR="nuclei-templates"
-          else
-            TEMPLATE_DIR="$HOME/.local/share/nuclei-templates"
-          fi
-          echo "Using templates from: $TEMPLATE_DIR"
+          TEMPLATES_DIR="$HOME/.local/share/nuclei-templates"
 
           if [ "${{ inputs.nuclei_input }}" = "urls" ] && [ -f urls.txt ]; then
             INPUT_FILE="urls.txt"
@@ -140,13 +130,14 @@ jobs:
           fi
 
           timeout 21000 nuclei -l "$INPUT_FILE" \
-            -t "$TEMPLATE_DIR" \
+            -t "$TEMPLATES_DIR" \
             $CUSTOM_FLAG \
             $TAGS_FLAG \
             -severity ${{ inputs.severity }} \
             -silent -retries 1 -timeout 8 \
             -bulk-size 100 -concurrency 100 \
             -o results.txt || true
+
       - name: Check for results
         id: check
         run: |
