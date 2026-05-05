@@ -53,9 +53,11 @@ jobs:
           path: ~/go/bin
           key: go-tools-${{ runner.os }}-v2
 
-      - name: Install subfinder
+      - name: Install tools
         if: steps.cache-tools.outputs.cache-hit != 'true'
-        run: go install github.com/projectdiscovery/subfinder/v2/cmd/subfinder@latest
+        run: |
+          go install github.com/projectdiscovery/subfinder/v2/cmd/subfinder@latest
+          go install github.com/projectdiscovery/httpx/cmd/httpx@latest
 
       - name: Download clean domains
         uses: actions/download-artifact@v4
@@ -110,10 +112,6 @@ jobs:
         with:
           path: ~/go/bin
           key: go-tools-${{ runner.os }}-v2
-
-      - name: Install httpx
-        if: steps.cache-tools.outputs.cache-hit != 'true'
-        run: go install github.com/projectdiscovery/httpx/cmd/httpx@latest
 
       - name: Download all subdomain artifacts
         uses: actions/download-artifact@v4
