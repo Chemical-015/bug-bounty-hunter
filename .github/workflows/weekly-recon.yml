@@ -1,4 +1,4 @@
-name: Weekly Subdomain Discovery
+name: Weekly Recon Pipeline
 on:
   schedule:
     - cron: '0 1 * * 0'
@@ -20,6 +20,8 @@ jobs:
           num_batches=$(( (total + 49) / 50 ))
           batches=$(seq 1 $num_batches | jq -R . | jq -sc .)
           echo "batches=$batches" >> $GITHUB_OUTPUT
+          echo "Total domains: $total"
+          echo "Total batches: $num_batches"
 
   discover:
     needs: prepare
@@ -52,6 +54,7 @@ jobs:
           sed -n "${start},$((start + 49))p" domains.txt > batch_domains.txt
           subfinder -dL batch_domains.txt -silent -timeout 30 -t 10 -max-time 350 -o subs_raw.txt || true
           grep -vP '^\d+[-\.]\d+[-\.]\d+[-\.]\d+\.' subs_raw.txt > batch_subs.txt || true
+          echo "Batch ${{ matrix.batch }} subdomains: $(wc -l < batch_subs.txt)"
 
       - name: Upload batch results
         uses: actions/upload-artifact@v4
@@ -88,9 +91,10 @@ jobs:
           half=$(( total / 2 ))
           head -n $half all_subdomains_clean.txt > subdomains1.txt
           tail -n +$((half + 1)) all_subdomains_clean.txt > subdomains2.txt
-          echo "Total: $total"
-          echo "File 1: $(wc -l < subdomains1.txt)"
-          echo "File 2: $(wc -l < subdomains2.txt)"
+          echo "=== SUBDOMAIN COUNTS ==="
+          echo "Total unique subdomains: $total"
+          echo "subdomains1.txt: $(wc -l < subdomains1.txt)"
+          echo "subdomains2.txt: $(wc -l < subdomains2.txt)"
 
       - name: Split subdomains for httpx
         id: split
@@ -122,7 +126,7 @@ jobs:
     if: ${{ always() && needs.combine_subs.result == 'success' }}
     strategy:
       fail-fast: false
-      max-parallel: 10
+      max-parallel: 20
       matrix:
         batch: ${{ fromJson(needs.combine_subs.outputs.httpx_batches) }}
     steps:
@@ -147,6 +151,7 @@ jobs:
           export PATH=$PATH:$(go env GOPATH)/bin
           start=$(( (${{ matrix.batch }} - 1) * 50000 + 1 ))
           sed -n "${start},$((start + 49999))p" all_subdomains_clean.txt > batch_subs.txt
+          echo "Batch ${{ matrix.batch }} input: $(wc -l < batch_subs.txt) hosts"
           httpx -l batch_subs.txt \
             -silent \
             -timeout 5 \
@@ -154,7 +159,7 @@ jobs:
             -rl 300 \
             -threads 100 \
             -o batch_live.txt || true
-          echo "Live hosts in batch ${{ matrix.batch }}: $(wc -l < batch_live.txt)"
+          echo "Batch ${{ matrix.batch }} live: $(wc -l < batch_live.txt)"
 
       - name: Upload live hosts
         uses: actions/upload-artifact@v4
@@ -184,6 +189,7 @@ jobs:
         run: |
           find all_live -name "*.txt" | xargs cat 2>/dev/null | \
           sort -u > live_hosts.txt || true
+          echo "=== FINAL LIVE HOST COUNT ==="
           echo "Total live hosts: $(wc -l < live_hosts.txt)"
 
       - name: Commit live hosts
