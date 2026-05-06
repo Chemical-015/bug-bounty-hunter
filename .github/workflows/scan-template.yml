@@ -54,6 +54,7 @@ jobs:
         run: |
           go install github.com/projectdiscovery/nuclei/v3/cmd/nuclei@latest
           go install github.com/projectdiscovery/katana/cmd/katana@latest
+
       - name: Install nuclei if missing
         run: |
           export PATH=$PATH:$(go env GOPATH)/bin
@@ -99,6 +100,12 @@ jobs:
           elif [ "$INPUT" = "live_hosts_404" ]; then
             if [ -f live_hosts_404.txt ] && [ -s live_hosts_404.txt ]; then
               cp live_hosts_404.txt input.txt
+            else
+              touch input.txt
+            fi
+          elif [ "$INPUT" = "new_live_hosts" ]; then
+            if [ -f new_live_hosts.txt ] && [ -s new_live_hosts.txt ]; then
+              cp new_live_hosts.txt input.txt
             else
               touch input.txt
             fi
