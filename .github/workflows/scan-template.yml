@@ -157,6 +157,7 @@ jobs:
           timeout 21000 nuclei -l "$INPUT_FILE" \
             $T_FLAG \
             $TAGS_FLAG \
+            -etags ssl,tls,http-missing-headers,tech,info \
             -severity "$SEVERITY" \
             -silent \
             -retries 1 \
