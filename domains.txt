@@ -27,10 +27,6 @@ vinci.com
 fondation-vinci.com
 infomaniak.com
 swisstransfer.com
-telenor.se
-bredbandsbolaget.se
-ownit.se
-vimla.se
 ezviz.com
 ys7.com
 unibet.com
@@ -59,8 +55,6 @@ contentsquare.com
 content-square.net
 csqtrk.net
 contentsquare.net
-ovh.com
-soyoustart.com
 easy4ipcloud.com
 imoulife.com
 imou.com
@@ -82,9 +76,6 @@ wgr-industries.com
 otto.de
 lascana.de
 bitoasis.net
-privateinternetaccess.com
-piaservers.com
-piaservers.net
 cyberghostvpn.com
 cyberghost.com
 cyberghost.app
@@ -98,3 +89,12 @@ alasco.de
 alasco.rocks
 teamviewer.com
 atg.se
+8x8.com
+wavecell.com
+ucverse.com
+fuze.com
+packet8.net
+onedoc.ch
+8x8.vc
+jit.si
+jitsi.net
