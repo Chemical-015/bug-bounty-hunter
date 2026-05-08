@@ -1,4 +1,4 @@
-name: Weekly Scans
+name: Weekly Scan
 on:
   schedule:
     - cron: '30 20 * * 0'
