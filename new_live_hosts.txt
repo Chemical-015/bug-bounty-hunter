@@ -1,2 +1,3 @@
-http://pages.acronis.com
-https://ivr.acronis.com
+https://prometheus.lh-cloud.acronis.work
+https://prometheus.li01-cloud.acronis.work
+https://prometheus.my01-cloud.acronis.work

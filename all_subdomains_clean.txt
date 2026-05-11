@@ -920,7 +920,6 @@ backend.staging.opensource.engcom.magento.com
 backup.acronis.com
 backup.ownit.se
 backup01.ownit.se
-bastion.hoteltonight.com
 baulog-odoo.post.ch
 bc-baas.acronis.com
 bc-eu2-baas.acronis.com
@@ -1125,6 +1124,7 @@ bus.blablacar.com
 butik.atg.se
 buy.acronis.com
 bw.acronis.work
+byod.atg.se
 bypass-app.alasco.de
 bytebase.lh-cloud.acronis.work
 c-aeu1-dev.contentsquare.net
@@ -1504,7 +1504,6 @@ cluster-b-bootstrap.cell-ea1.cell-us.dev.musta.ch
 cluster-b-internal.cell-ea1.cell-us.dev.musta.ch
 cluster-b.cell-ea1.cell-us.dev.musta.ch
 cmail.acronis.com
-cmkt.blablacar.com
 cmkt.sk.blablacar.com
 cmore01.ownit.se
 cn-ali.muscache.com
@@ -1550,7 +1549,6 @@ connecta2.post.ch
 connectaint.post.ch
 connectaint1.post.ch
 connectaint2.post.ch
-connectivity.hoteltonight.com
 consent.onedoc.ch
 console.dev.galileo.musta.ch
 console.prod.galileo.musta.ch
@@ -1622,7 +1620,6 @@ cs-mdmint.post.ch
 cs-mdmtest.post.ch
 cs-tags-production.contentsquare.net
 cs.airbnb.org
-cs.hoteltonight.com
 cs.post.ch
 cs1.post.ch
 cs1int.post.ch
@@ -3673,7 +3670,6 @@ ka1.aa.contentsquare.net
 ka1.af.contentsquare.net
 ka1.ba.contentsquare.net
 ka1.bf.contentsquare.net
-kafka-manager.hoteltonight.com
 kampagne.post.ch
 kampagnen.post.ch
 kampagnen1.post.ch
@@ -3914,7 +3910,6 @@ load-grafana.lh-cloud.acronis.work
 load-kibana.lh-cloud.acronis.work
 local-vault.corp.magento.com
 localhost.bredbandsbolaget.se
-localhost.mailer.hoteltonight.com
 locarno-festival.post.ch
 locarno-festival1.post.ch
 locarno-festival2.post.ch
@@ -4552,7 +4547,6 @@ o2.sndgd.blablacar.com
 o2224.abmail.community.blablalines.com
 o25.ptr9839.email.airbnb.org
 o3.sndgd.blablacar.com
-o36.ptr9294.git.musta.ch
 o4.sndgd.blablacar.com
 o5.sndgd.blablacar.com
 o508.abmail.community.blablacar.com
@@ -4956,6 +4950,7 @@ prod.sorting.post.ch
 prod.spelassistent.aws.atg.se
 prod.sre.aws.atg.se
 prod.streaming.aws.atg.se
+prod1-cb.atg.se
 product-security-jenkins.acronis.work
 profile-photos-staging.blablacardaily.com
 profile-photos.blablacardaily.com
@@ -4994,3 +4989,8 @@ prometheus.jp-cloud.acronis.work
 prometheus.jp03-cloud.acronis.work
 prometheus.ka.aa.contentsquare.net
 prometheus.kaseya-cloud.acronis.work
+prometheus.kr01-cloud.acronis.work
+prometheus.lh-cloud.acronis.work
+prometheus.li01-cloud.acronis.work
+prometheus.mx01-cloud.acronis.work
+prometheus.my01-cloud.acronis.work
