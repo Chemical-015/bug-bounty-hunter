@@ -124,11 +124,16 @@ jobs:
           katana -list input.txt \
             -silent \
             -js-crawl \
-            -depth 2 \
-            -timeout 10 \
-            -rl 50 \
-            -concurrency 10 \
+            -depth 1 \
+            -timeout 5 \
+            -rl 10 \
+            -concurrency 5 \
+            -max-response-size 2000000 \
             -o urls.txt || true
+          if [ -f urls.txt ]; then
+            sort -u urls.txt | head -2000 > urls_capped.txt
+            mv urls_capped.txt urls.txt
+          fi
           echo "URLs found: $(wc -l < urls.txt 2>/dev/null || echo 0)"
 
       - name: Run nuclei
@@ -150,20 +155,12 @@ jobs:
             exit 0
           fi
 
-          # ── Template selection logic ──────────────────────────────
-          # If tags is empty AND custom-templates folder exists:
-          #   → run ONLY custom templates (no nuclei defaults)
-          # If tags is set AND custom-templates folder exists:
-          #   → run both nuclei defaults (filtered by tags) + custom templates
-          # Otherwise:
-          #   → run nuclei defaults filtered by tags
           TAGS_FLAG=""
           if [ -n "$TAGS" ]; then
             TAGS_FLAG="-itags $TAGS"
           fi
 
           if [ -d "custom-templates" ] && [ -z "$TAGS" ]; then
-            # Custom-only mode: no default templates, no tags filter
             T_FLAG="-t custom-templates"
           elif [ -d "custom-templates" ] && [ -n "$TAGS" ]; then
             T_FLAG="-t $TEMPLATES_DIR -t custom-templates"
@@ -179,8 +176,8 @@ jobs:
             -silent \
             -retries 1 \
             -timeout 10 \
-            -bulk-size 50 \
-            -concurrency 50 \
+            -bulk-size 25 \
+            -concurrency 25 \
             -rate-limit 10 \
             -fhr \
             -max-host-error 50 \
