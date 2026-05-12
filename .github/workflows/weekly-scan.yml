@@ -1,18 +1,20 @@
 name: Weekly Scan
+
 on:
   schedule:
     - cron: '30 20 * * 6'
   workflow_dispatch:
+
 jobs:
   # ─── 1. COMBINED WEEKLY SCAN ───────────────────────────────────
-  # JWT + GraphQL + Swagger + Git/Env + Exposed Files +
-  # Default Logins + Dev Tools + S3 + SpringBoot
-  # Uses nuclei default templates filtered by tags
+  # JWT + GraphQL + Swagger + Git/Env + Default Logins + Dev Tools + S3 + SpringBoot
+  # Removed: exposure, file, config, token, secret, api-key
+  # Those tags overlap with JS Secrets scan — they live there only
   weekly_combined:
     uses: ./.github/workflows/scan-template.yml
     with:
       scan_name: "Weekly Combined"
-      tags: "jwt,graphql,swagger,api-docs,openapi,git,env-file,config,exposure,file,default-login,jenkins,grafana,kibana,aws-s3,s3,springboot,actuator"
+      tags: "jwt,graphql,swagger,api-docs,openapi,git,env-file,default-login,jenkins,grafana,kibana,aws-s3,s3,springboot,actuator"
       severity: "low,medium,high,critical"
       input_file: "live_hosts"
     secrets:
@@ -23,13 +25,13 @@ jobs:
   # ─── 2. JS SECRETS SCAN ────────────────────────────────────────
   # Katana crawls every live host, finds hidden URLs and JS files
   # Nuclei then scans those URLs specifically for secrets and keys
-  # Tags narrowed to only what finds things inside JS files
-  # This is the real API key goldmine — no other scan covers this
+  # Tags narrowed to only what actually fires on JS file content
+  # exposure/file/config removed — they don't find things inside JS
   weekly_js_secrets:
     uses: ./.github/workflows/scan-template.yml
     with:
       scan_name: "JS Secrets"
-      tags: "exposure,token,secret,api-key,generic-tokens,file,config"
+      tags: "token,secret,api-key,generic-tokens"
       severity: "low,medium,high,critical"
       use_katana: true
       input_file: "live_hosts"
@@ -39,16 +41,15 @@ jobs:
       EMAIL_TO: ${{ secrets.EMAIL_TO }}
 
   # ─── 3. CUSTOM TEMPLATES ───────────────────────────────────────
-  # Runs ONLY our hand-crafted templates — no nuclei defaults mixed in
-  # Tags left empty so scan-template runs custom-templates folder exclusively
+  # Runs ONLY our hand-crafted templates — zero nuclei defaults
+  # use_custom_only: true means custom-templates dir only, nothing else appended
   # Covers: graphql-field-suggestion-leak, spring-boot-actuator-exposed,
   #         swagger-unauthenticated-execution
-  # Better precision than nuclei defaults for these specific checks
   weekly_custom:
     uses: ./.github/workflows/scan-template.yml
     with:
       scan_name: "Custom Templates"
-      tags: ""
+      use_custom_only: true
       severity: "low,medium,high,critical"
       input_file: "live_hosts"
     secrets:
